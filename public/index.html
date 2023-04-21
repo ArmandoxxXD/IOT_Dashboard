@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DASHBOARD IOT</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- update the version number as needed -->
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
+
+    <!-- include only the Firebase features as you need -->
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-database.js"></script>
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://cdn.rawgit.com/Mikhus/canvas-gauges/gh-pages/download/2.1.7/all/gauge.min.js"></script>
+  
+
+    <script>
+     // REPLACE WITH YOUR web app's Firebase configuration
+     const firebaseConfig = {
+      apiKey: "AIzaSyCNR5AzznMTE0341budXMRZBVjRSyBQg6o",
+      authDomain: "dashboardesp32.firebaseapp.com",
+      projectId: "dashboardesp32",
+      storageBucket: "dashboardesp32.appspot.com",
+      messagingSenderId: "930481383213",
+      appId: "1:930481383213:web:79c95d36d745aa75b2d5a4",
+      measurementId: "G-6FJLVBEV0H"
+    };
+
+      // Initialize firebase
+      firebase.initializeApp(firebaseConfig);
+
+      // Make auth and database references
+      const auth = firebase.auth();
+      const db = firebase.database();
+
+    </script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+  <!--TOP BAR-->
+  <div class="topnav">
+    <h1>DASHBOARD IOT <i class="fas fa-clipboard-list"></i></h1>
+  </div>
+
+  <!--AUTHENTICATION BAR (USER DETAILS/LOGOUT BUTTON)-->
+  <div id="authentication-bar" style="display: none;">
+    <p><span id="authentication-status">Usuario Logged</span>
+       <span id="user-details">USEREMAIL</span>
+       <a href="/" id="logout-link">(logout)</a>
+    </p>
+  </div>
+
+  <!--LOGIN FORM-->
+  <form id="login-form" style="display: none;">
+    <div class="form-elements-container">
+      <label for="input-email"><b>Email</b></label>
+      <input type="text" placeholder="Enter Username" id="input-email" required>
+
+      <label for="input-password"><b>Password</b></label>
+      <input type="password" placeholder="Enter Password" id="input-password" required>
+
+      <button type="submit" id="login-button">Login</button>
+      <p id="error-message" style="color:red;"></p>
+    </div>
+  </form>
+
+  <!--CONTENT (SENSOR READINGS)-->
+  <div class="content-sign-in" id="content-sign-in" style="margin-top: 20px;">
+    <div class="cards">
+      <!--LED-->
+      <div class="card card-switch\"><h4><i class="fas fa-lightbulb\"></i>ESTADO LEDS</h4><label class="switch"><input type="checkbox" onchange="toggleLed(this);" id="led"><span class="slider"></span></label></div>            
+     
+      <!--COMIDA-->
+      <div class="card">
+        <button id="btn-comida" >Dar Comida</button>
+      <div class="loader">
+      <div class="loader-bar"></div>
+      </div>
+    </div>
+
+       <!--COFRE-->
+      <div class="card card-switch\"><h4><i class="fas fa-lightbulb\" id="CardAgua"></i>ESTADO AGUA</h4><label class="switch"0><h6 id="nivelAgua"></h6></label></div>            
+        
+
+      <!--TEMPERATURE-->
+      <div class="card">
+        <p><i class="fas fa-thermometer-half" style="color:#e72b3b;"></i> TEMPERATURA</p>
+        <p><span class="reading"><span id="temp"></span> &deg;C</span></p>
+      </div>
+      <!--LUZ-->
+      <div class="card">
+        <p><i class="fa-sharp fa-regular fa-lightbulb" style="color: yellow;"></i> LUZ</p>
+        <p><span class="reading"><span id="luz"></span> </span></p>
+      </div>
+      <!--PROXIMIDAD-->
+      <div class="card">
+        <p><i class="fas fa-rocket" style="color:#e47637;"></i> PROXIMIDAD</p>
+        <p><span class="reading"><span id="proximidad"></span> CM</span></p>
+      </div> 
+    
+          
+    </div>
+
+    <div style="display: flex; margin-top: 50px;">
+
+           <!--TEMPERATURE-CHART-->
+           <div class="cards" style="width: 480px; display: inline-block;">
+            <div class="card">
+              <p><i class="fas fa-thermometer-half" style="color:#059e8a;"></i> GRAFICA DE PROXIMIDAD</p>
+              <div id="chart-proximidad" class="chart-container"></div>
+            </div>
+          </div>
+      
+    
+           <!--Motor-->
+          <div class="card" style="display: inline-block;">
+            <p> BOMBA DE AIRE</p>
+            <div class="container">
+              <div class="speedometer">
+                <div class="dial"></div>
+                <div class="needle"></div>
+                <div class="range-text">
+                </div>
+                <div class="speed-text"></div>
+              </div>
+              <input type="range" min="0" max="100" value="0" id="motor-velocidad">
+            </div>
+          </div>
+          
+              <!--Luz-CHART-->
+              <div class="cards" style="width: 480px; display: inline-block;">
+                <div class="card">
+                  <p><i class="fa-sharp fa-regular fa-lightbulb" style="color: yellow;"></i> GRAFICA DE LUZ<br> </p>
+                  <div id="chart-luz" class="chart-container"></div>
+                </div>
+              </div>
+
+    </div>
+     
+    <!--CHARTS-->
+  <!--  <div id="charts-div" style="display:none"> -->
+      <!--SET NUMBER OF READINGS INPUT FIELD-->
+    <div id="charts-div"  style="margin-top: 20px;">
+    
+      <!--TEMPERATURE-CHART-->
+      <div class="cards" >
+        <div class="card">
+          <p><i class="fas fa-thermometer-half" style="color:#059e8a;"></i> GRAFICA DE TEMPERATURA</p>
+          <div id="chart-temperature" class="chart-container"></div>
+        </div>
+      </div>
+
+
+  </div>
+<br>
+  
+
+  <script src="scripts/index.js"></script>
+  <script src="scripts/auth.js"></script>
+  <script src="scripts/charts-definitions.js"></script>
+  </body>
+</html>
